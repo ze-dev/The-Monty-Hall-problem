@@ -1,4 +1,6 @@
-# Не забыть все импорты в начало !!
+import random 
+
+# ================================  classes
 
 class Door:
     """ Дверь
@@ -28,7 +30,6 @@ class Director(Showmen):
 
     def place_prize(self, our_wall):
         # случайно определим номер, за какой будет а/м, и пусть режиссер его запомнит
-        import random
         self.car_place = random.randint(1, 3)
         # теперь поместим за дверь с выбранным номером а/м, за другие - коз ).
         for n in range(1,4,1):
@@ -52,8 +53,26 @@ class Host(Showmen):
         super().__init__()
 
 
-class Player:
+class Player:         # ============================================ class Player  - не идет. отладка в testMHP3
     """Игрок. Выбирает, какую дверь открыть"""
+    def __init__(self):
+        self.selected_door = None
+
+    def choose_door(self, the_same_door = False):
+        # при Ложь по умолчанию всегда выбираем новую дверь
+        if not the_same_door:
+            seq = [1,2,3]
+            # если дверь была ранее выбрана - исключим ее номер из выбора
+            if not self.selected_door == None:
+                seq.remove(self.selected_door)
+            # ну и собственно сам выбор
+            self.selected_door = random.choice(seq)
+        # при Истина оставляем выбор на старой
+        return self.selected_door
+
+
+
+
 
 
 class Prize:  # перенесу функционал в дверь
