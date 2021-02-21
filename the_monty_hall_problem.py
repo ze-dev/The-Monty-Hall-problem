@@ -1,5 +1,7 @@
 import random
 
+show_dialogs = True  # показывать диалоги между участниками в процессе игры
+
 # ================================  classes
 
 class Door:
@@ -9,7 +11,7 @@ class Door:
     def __init__(self, number):
 
         self.number = number        # просто номер двери: 1, 2 или 3
-        self.prize = "Undefined"           # наименование приза: "Car" ..
+        self.prize = "Undefined"    # наименование приза: "Car" ..
         self.prize_int = None       # числовое представление приза, 1 или 0
 
     def __repr__(self):
@@ -30,8 +32,8 @@ class Director(Showmen):
 
     def place_prize(self, our_wall):
         # случайно определим номер, за какой будет а/м, и пусть режиссер его запомнит
-        self.car_place = random.randint(1, 3)
-        # теперь поместим за дверь с выбранным номером а/м, за другие - коз ).
+        self.car_place = random.randint(1, 3) # car_place - целое, номер выигрышной двери
+        # теперь поместим в стену за дверь с выбранным номером а/м, за другие - коз ).
         for n in range(1,4,1): # тут достаточно делать выбор просто из трех, этим можно пренебречь
             if n == self.car_place:
                 our_wall[n].prize = "Car"
@@ -52,6 +54,13 @@ class Host(Showmen):
     def __init__(self):
         super().__init__()
 
+    def announce_prize_door(self): # объявляет призовую дверь
+        return self.car_place
+
+    @staticmethod
+    def do_your_choice(attemp_number):
+        return attemp_number # номер попытки
+
 
 class Player:
     """Игрок. Выбирает, какую дверь открыть"""
@@ -59,60 +68,58 @@ class Player:
         self.selected_door = None
 
     def choose_door(self,attempt, the_same_door = False):
-        # далее поубирать лишние ретены
+        # главная (основная) последовательность
         main_seq = [1, 2, 3]
+        # создаем (вспомогательное) множество 1-300 (для более распределенного рандома)
         seq = [x for x in range (main_seq[0],main_seq[-1]*100+1,1)]
         # при первом выборе выбираем любую вообще
-        if attempt == 1:
-            self.selected_door = self.accuracy(random.choice(seq))
+        if attempt == 1:  # попытка 1
+            qwer = random.choice(seq)
+            asd = self.accuracy(qwer)
+            self.selected_door = asd
             return self.selected_door
         # при втором выборе: зависит выбирать ли ту же самую дверь
-        if attempt == 2:
+        if attempt == 2:  # попытка 2
             # если ту же самую
             if the_same_door:
                 return self.selected_door
             # если надо другую
             else:
-                seq.remove(self.selected_door)  # ; print(seq)
+                main_seq.remove(self.selected_door)  # ; print(seq)
                 self.selected_door = self.accuracy(random.choice(seq))
                 return self.selected_door
     @staticmethod
-    def accuracy(got_num):
+    def accuracy(got_num): # повышение точности выбора двери
         if got_num > 200:
             return 3
         elif got_num > 100:
             return 2
         else:
             return 1
-    @staticmethod #  короче из (которая будет) 1 созлать последовательность 1- 100, далее из 2х - 2-100
-    def seq(main_seq):
-        for elem in seq:
-            seq_cur = # детальная отладка в третьем тестовом
-
-
-
-class Prize:  # перенести функционал в дверь
-    '''Приз. Может быть, чем угодно, хоть козой, хоть автомобилем
-    Помещается за дверь режиссером'''
-    name: object
-    prize: object
-    val: object
-
-    def __init__(self, prize):
-        self.name = prize  # str "Car", ..
-        self.val = self.vdc[self.name]  # int 0,1
-
-    def __repr__(self):
-        return self.number  # str "Car", ..
-
 
 class Camera:
     '''Камера. Беспристрастно фиксирует происходящее в студии. Может показать все разультаты'''
     def __init__(self):
-        self.first_choice = None
-        self.second_choice = None
-    def record(self,choice):
-        self.first_choice = choice
+        #self.first_choice = None # первый выбор игрока
+        #self.second_choice = None # второй выбор игрока
+        #self.prize_door = None # номер двери, за которой а/м
+        self.tape = []  # пленка, все записывается в нее: [frame0, frame1, ..]
+        self.frame = [] # один кадр с пленки: [первый_выбор, второй_выбор, призовая_дверь]
+
+    def record(self,choice): # запишем 1й выбор, далее 2й, далее призовую дверь
+        self.frame.append(choice)
+        if len(self.frame)==3:
+            self.tape.append(self.frame)
+            self.frame = []
+
+    def switch_on(self): # включение камеры, заправка чистой пленки
+        self.tape = []
+        self.frame = []
+
+    def show(self):
+        for frame in self.tape:
+            print(frame)
+
 
 # ------------------------------------ body
 
@@ -120,29 +127,37 @@ class Camera:
 d1 = Door(1)
 d2 = Door(2)
 d3 = Door(3)
+
 # все двери находятся в одной стене, коей будет словарь
 door_list = [d1, d2, d3]
 wall = dict([(x.number, x) for x in door_list])
 
-# создаем режиссера и ведущего
-drc = Director()
-hst = Host()
+# создаем режиссера, ведущего, игрока и камеру
+director = Director()
+host = Host()
+player = Player()
 camera = Camera()
-plr = Player()
-# помещаем режиссером за двери А/м и двух коз
-drc.place_prize(wall)
-# сообщаем ведущему, где а/м
-drc.inform(hst)
-# ведущий должен спросить у грока, что он выберет, и камера должна это зафиксировать
 
----------------------------проектируенм дальнейшшее поведение товарищей в студии
+# включаем камеру
+camera.switch_on()
 
-camera.record(hst.ask(player.choose_door(1, thesame = false)))) ^  1 - номер попытки/ответа, то_же - вибыраем ли старое значение или будеи новое
+#=========================================================================================
+# ========================== сам игровой процесс - далее в  цикл его 
+#=========================================================================================
 
+for double in range(10):
+    # режиссером выбирает номер выигрышной двери, запоминает его и помещает за двери А/м и двух коз
+    director.place_prize(wall)
 
-camera.recosd(host.reask(plkayer/chekagain(2, the_same = True)))
-camers.record(drc.obyavlzyet_ghde)
+    # ведущий узнает от режиссера номер выигрышной двери и запоминет его
+    # в конце он сообщит за какой дверью был авто.
+    director.inform(host)
 
-# - - - - - - - - - - - - - - - - - - output
+    # ведущий должен спросить у грока, что он выберет, и камера должна это зафиксировать
+    camera.record(player.choose_door(host.do_your_choice(1))) # первый раз
+    camera.record(player.choose_door(host.do_your_choice(2), the_same_door = True)) # второй раз
+    camera.record(host.announce_prize_door())
 
-print(wall)
+# results
+camera.show()
+print(wall) # оно в каждой итерации разное - исправлять
